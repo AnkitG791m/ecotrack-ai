@@ -1,0 +1,25 @@
+const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  NOT_FOUND: 404,
+  SERVER_ERROR: 500
+};
+
+const CARBON_LIMITS = {
+  GREEN: 200,
+  YELLOW: 400,
+  RED: 600
+};
+
+const RATE_LIMIT = {
+  WINDOW_MS: 15 * 60 * 1000,
+  MAX_REQUESTS: 100
+};
+
+module.exports = {
+  HTTP_STATUS,
+  CARBON_LIMITS,
+  RATE_LIMIT
+};
