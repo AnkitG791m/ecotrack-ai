@@ -5,8 +5,10 @@ const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean');
 const connectDB = require('./config/db');
 const { HTTP_STATUS, RATE_LIMIT } = require('./config/constants');
+const { errorHandler } = require('./middleware/errorMiddleware');
 
 // Load environment variables
 dotenv.config();
@@ -19,12 +21,36 @@ if (process.env.NODE_ENV !== 'test') {
 const app = express();
 app.disable('x-powered-by');
 
-// Security and Efficiency Middlewares
-app.use(helmet());
+// Security Middlewares
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
+
+// XSS Protection
+app.use(xss());
 
 // Configure CORS
+const allowedOrigins = process.env.FRONTEND_URL
+  ? [process.env.FRONTEND_URL]
+  : (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173']);
+
 const corsOptions = {
-  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+    // Allow localhost fallback for testing
+    if (origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 };
 app.use(cors(corsOptions));
@@ -42,9 +68,14 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Increase limits to allow base64 images to be uploaded
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Request Body Limits
+// Parse larger JSON only for image analysis/bill scanning routes
+app.use('/api/ai/analyze-image', express.json({ limit: '10mb' }));
+app.use('/api/ai/scan-bill', express.json({ limit: '10mb' }));
+
+// Global limits for all other routes
+app.use(express.json({ limit: '100kb' }));
+app.use(express.urlencoded({ limit: '100kb', extended: true }));
 
 /**
  * @middleware inputLengthValidator
@@ -78,18 +109,8 @@ app.get('/', (req, res) => {
   res.status(HTTP_STATUS.OK).json({ status: 'healthy', message: 'Welcome to EcoTrack AI API Server!' });
 });
 
-/**
- * @middleware errorHandler
- * @desc Catches all errors and returns standardized JSON error responses
- * @access Public
- */
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(HTTP_STATUS.SERVER_ERROR).json({ 
-    error: 'Internal server error',
-    requestId: Date.now()
-  });
-});
+// Centralized error handler
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 

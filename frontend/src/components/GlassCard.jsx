@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 
 const GlassCard = ({ children, className = '', onClick, delay = 0, hoverable = true }) => {
@@ -15,4 +15,4 @@ const GlassCard = ({ children, className = '', onClick, delay = 0, hoverable = t
   );
 };
 
-export default GlassCard;
+export default memo(GlassCard);

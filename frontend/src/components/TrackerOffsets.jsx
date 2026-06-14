@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Trees } from 'lucide-react';
 import GlassCard from './GlassCard';
 
@@ -81,4 +81,4 @@ const TrackerOffsets = ({ metrics, history, treesOffset, setTreesOffset, latestR
   );
 };
 
-export default TrackerOffsets;
+export default memo(TrackerOffsets);

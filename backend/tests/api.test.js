@@ -572,6 +572,26 @@ describe('EcoTrack AI - Test Suite', () => {
       // Email field is an object, which should be rejected as invalid email
       expect(res.statusCode).toBe(400);
     });
+
+    it('should block chatbot queries with empty message (edge case)', async () => {
+      const res = await request(app)
+        .post('/api/ai/chatbot')
+        .set('Authorization', `Bearer ${mockToken}`)
+        .send({});
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject carbon calculator requests with empty payload (edge case)', async () => {
+      const res = await request(app)
+        .post('/api/calculator/calculate')
+        .set('Authorization', `Bearer ${mockToken}`)
+        .send({});
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
   });
 
   // --- 11. ADMIN API (2 Tests) ---
