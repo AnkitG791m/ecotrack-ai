@@ -1,9 +1,10 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const env = require('../config/env');
 
 // Initialise the Gemini API client if API key is provided
 let genAI = null;
-if (process.env.GEMINI_API_KEY) {
-  genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+if (env.GEMINI_API_KEY) {
+  genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 }
 
 // Helper to check if API is active

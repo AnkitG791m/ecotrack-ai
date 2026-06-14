@@ -1,50 +1,35 @@
-const mongoose = require('mongoose');
+const healthService = require('../services/healthService');
 const { HTTP_STATUS } = require('../config/constants');
-const { getChatbotResponse } = require('../utils/gemini');
+const asyncHandler = require('../middleware/asyncHandler');
 
 const getHealth = (req, res) => {
-  res.json({
-    success: true,
-    status: 'healthy',
-    uptime: process.uptime(),
-    timestamp: new Date()
-  });
+  const result = healthService.getHealth();
+  res.json(result);
 };
 
 const getDbHealth = (req, res) => {
-  const dbStatus = process.env.NODE_ENV === 'test' ? 1 : mongoose.connection.readyState;
-  const statusLabels = {
-    0: 'disconnected',
-    1: 'connected',
-    2: 'connecting',
-    3: 'disconnecting'
-  };
-
-  if (dbStatus === 1) {
-    return res.json({
+  const result = healthService.getDbHealth();
+  if (result.isHealthy) {
+    res.json({
       success: true,
-      status: 'healthy',
-      connection: statusLabels[dbStatus]
+      status: result.status,
+      connection: result.connection
     });
   } else {
-    return res.status(HTTP_STATUS.SERVER_ERROR).json({
+    res.status(HTTP_STATUS.SERVER_ERROR).json({
       success: false,
-      status: 'unhealthy',
-      connection: statusLabels[dbStatus]
+      status: result.status,
+      connection: result.connection
     });
   }
 };
 
-const getAiHealth = async (req, res) => {
+const getAiHealth = asyncHandler(async (req, res) => {
   try {
-    const isMock = !process.env.GEMINI_API_KEY;
-    const response = await getChatbotResponse([], 'ping');
-    
+    const result = await healthService.getAiHealth();
     res.json({
       success: true,
-      status: 'healthy',
-      mode: isMock ? 'mocked-simulation' : 'live-api',
-      available: !!response
+      ...result
     });
   } catch (error) {
     res.status(HTTP_STATUS.SERVER_ERROR).json({
@@ -53,7 +38,7 @@ const getAiHealth = async (req, res) => {
       error: error.message
     });
   }
-};
+});
 
 module.exports = {
   getHealth,

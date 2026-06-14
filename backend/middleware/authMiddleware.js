@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const userRepository = require('../repositories/userRepository');
 const { HTTP_STATUS } = require('../config/constants');
+const env = require('../config/env');
 
 const protect = async (req, res, next) => {
   let token;
@@ -11,10 +12,10 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecret_ecotrack_jwt_key');
+      const decoded = jwt.verify(token, env.JWT_SECRET);
 
       // Get user from the token
-      req.user = await User.findById(decoded.id).select('-password');
+      req.user = await userRepository.findByIdWithoutPassword(decoded.id);
       if (!req.user) {
         return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: 'Not authorized, user not found' });
       }

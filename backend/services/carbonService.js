@@ -1,12 +1,19 @@
-const carbonRepository = require('../repositories/carbonRepository');
-const userRepository = require('../repositories/userRepository');
 const { calculateCarbonScore } = require('../utils/carbonCalc');
+const ValidationError = require('../utils/errors/ValidationError');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const CarbonReportDTO = require('../dto/CarbonReportDTO');
 
 class CarbonService {
+  constructor(carbonRepository, userRepository, logger) {
+    this.carbonRepository = carbonRepository;
+    this.userRepository = userRepository;
+    this.logger = logger;
+  }
+
   async saveCalculatorReport(userId, answers) {
     const calcResult = calculateCarbonScore(answers);
 
-    const report = await carbonRepository.create({
+    const report = await this.carbonRepository.create({
       user: userId,
       score: calcResult.totalKgCO2,
       annualEstimation: calcResult.annualEstimationTons,
@@ -18,14 +25,12 @@ class CarbonService {
       answers
     });
 
-    const user = await userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) {
-      const err = new Error('User not found');
-      err.statusCode = 404;
-      throw err;
+      throw new NotFoundError('User not found');
     }
 
-    const pastReportsCount = await carbonRepository.countDocuments({ user: userId });
+    const pastReportsCount = await this.carbonRepository.countDocuments({ user: userId });
     let pointsEarned = pastReportsCount === 1 ? 100 : 30;
     user.points += pointsEarned;
 
@@ -46,11 +51,13 @@ class CarbonService {
     }
 
     user.badges = Array.from(currentBadges);
-    await userRepository.save(user);
+    await this.userRepository.save(user);
+
+    this.logger.info(`Carbon calculator report saved for user: ${userId}, score: ${calcResult.totalKgCO2}`);
 
     return {
       pointsEarned,
-      report,
+      report: CarbonReportDTO.fromEntity(report),
       user: {
         points: user.points,
         badges: user.badges
@@ -59,12 +66,20 @@ class CarbonService {
   }
 
   async getHistory(userId) {
-    return await carbonRepository.find({ user: userId }).sort({ createdAt: 1 });
+    const reports = await this.carbonRepository.find({ user: userId }).sort({ createdAt: 1 });
+    return CarbonReportDTO.fromEntities(reports);
   }
 
   async getLatestReport(userId) {
-    return await carbonRepository.findOne({ user: userId }).sort({ createdAt: -1 });
+    const report = await this.carbonRepository.findOne({ user: userId }).sort({ createdAt: -1 });
+    return CarbonReportDTO.fromEntity(report);
   }
 }
 
-module.exports = new CarbonService();
+// Dependency Injection Composition
+const carbonRepository = require('../repositories/carbonRepository');
+const userRepository = require('../repositories/userRepository');
+const logger = require('../utils/logger');
+
+module.exports = new CarbonService(carbonRepository, userRepository, logger);
+module.exports.CarbonService = CarbonService;

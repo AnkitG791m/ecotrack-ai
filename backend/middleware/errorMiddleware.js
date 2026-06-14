@@ -1,6 +1,7 @@
 const { ZodError } = require('zod');
 const { HTTP_STATUS } = require('../config/constants');
 const logger = require('../utils/logger');
+const AppError = require('../utils/errors/AppError');
 
 class ApiError extends Error {
   constructor(statusCode, message) {
@@ -14,6 +15,12 @@ const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || HTTP_STATUS.SERVER_ERROR;
   let message = err.message || 'Internal Server Error';
   let errors = undefined;
+
+  // Handle AppError and its subclasses
+  if (err instanceof AppError) {
+    statusCode = err.statusCode;
+    message = err.message;
+  }
 
   // Handle Zod Schema validation errors
   if (err.name === 'ZodError' || (err.constructor && err.constructor.name === 'ZodError') || err instanceof ZodError) {

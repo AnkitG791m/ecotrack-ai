@@ -1,23 +1,30 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const userRepository = require('../repositories/userRepository');
-
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'supersecret_ecotrack_jwt_key', {
-    expiresIn: '30d',
-  });
-};
+const env = require('../config/env');
+const ValidationError = require('../utils/errors/ValidationError');
+const AuthError = require('../utils/errors/AuthError');
+const NotFoundError = require('../utils/errors/NotFoundError');
+const UserDTO = require('../dto/UserDTO');
 
 class AuthService {
+  constructor(userRepository, logger) {
+    this.userRepository = userRepository;
+    this.logger = logger;
+  }
+
+  _generateToken(id) {
+    return jwt.sign({ id }, env.JWT_SECRET, {
+      expiresIn: '30d',
+    });
+  }
+
   async registerUser(userData) {
     const { name, email, password, age, country, profilePhoto } = userData;
 
     // Check if user exists
-    const userExists = await userRepository.findOne({ email });
+    const userExists = await this.userRepository.findOne({ email });
     if (userExists) {
-      const err = new Error('User already exists');
-      err.statusCode = 400;
-      throw err;
+      throw new ValidationError('User already exists');
     }
 
     // Hash password
@@ -25,7 +32,7 @@ class AuthService {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Create user
-    const user = await userRepository.create({
+    const user = await this.userRepository.create({
       name,
       email,
       password: hashedPassword,
@@ -36,30 +43,26 @@ class AuthService {
     });
 
     if (!user) {
-      const err = new Error('Invalid user data');
-      err.statusCode = 400;
-      throw err;
+      throw new ValidationError('Invalid user data');
     }
 
+    this.logger.info(`User registered: ${email}`);
+
     return {
-      token: generateToken(user._id),
-      user: this._mapUserObject(user)
+      token: this._generateToken(user._id),
+      user: UserDTO.fromEntity(user)
     };
   }
 
   async loginUser(email, password) {
-    const user = await userRepository.findOne({ email });
+    const user = await this.userRepository.findOne({ email });
     if (!user) {
-      const err = new Error('Invalid credentials');
-      err.statusCode = 401;
-      throw err;
+      throw new AuthError('Invalid credentials');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      const err = new Error('Invalid credentials');
-      err.statusCode = 401;
-      throw err;
+      throw new AuthError('Invalid credentials');
     }
 
     // Update streak / login dates (Daily login bonus)
@@ -81,27 +84,29 @@ class AuthService {
         user.streak = 1;
       }
       user.lastLoginDate = new Date();
-      await userRepository.save(user);
+      await this.userRepository.save(user);
     }
 
+    this.logger.info(`User logged in: ${email}`);
+
     return {
-      token: generateToken(user._id),
+      token: this._generateToken(user._id),
       pointsAwarded,
-      user: this._mapUserObject(user)
+      user: UserDTO.fromEntity(user)
     };
   }
 
   async googleLogin(googleData) {
     const { name, email, profilePhoto } = googleData;
 
-    let user = await userRepository.findOne({ email });
+    let user = await this.userRepository.findOne({ email });
 
     if (!user) {
       const generatedPassword = Math.random().toString(36).substring(2, 10);
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(generatedPassword, salt);
 
-      user = await userRepository.create({
+      user = await this.userRepository.create({
         name,
         email,
         password: hashedPassword,
@@ -127,32 +132,30 @@ class AuthService {
           user.streak = 1;
         }
         user.lastLoginDate = new Date();
-        await userRepository.save(user);
+        await this.userRepository.save(user);
       }
     }
 
+    this.logger.info(`Google login simulation successful for: ${email}`);
+
     return {
-      token: generateToken(user._id),
-      user: this._mapUserObject(user)
+      token: this._generateToken(user._id),
+      user: UserDTO.fromEntity(user)
     };
   }
 
   async getProfile(userId) {
-    const user = await userRepository.findByIdWithoutPassword(userId);
+    const user = await this.userRepository.findByIdWithoutPassword(userId);
     if (!user) {
-      const err = new Error('User not found');
-      err.statusCode = 404;
-      throw err;
+      throw new NotFoundError('User not found');
     }
-    return user;
+    return UserDTO.fromEntity(user);
   }
 
   async updateProfile(userId, updateData) {
-    const user = await userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) {
-      const err = new Error('User not found');
-      err.statusCode = 404;
-      throw err;
+      throw new NotFoundError('User not found');
     }
 
     user.name = updateData.name || user.name;
@@ -165,27 +168,18 @@ class AuthService {
       user.password = await bcrypt.hash(updateData.password, salt);
     }
 
-    const updatedUser = await userRepository.save(user);
+    const updatedUser = await this.userRepository.save(user);
 
-    return this._mapUserObject(updatedUser);
-  }
+    this.logger.info(`User profile updated for: ${user.email}`);
 
-  _mapUserObject(user) {
-    return {
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      age: user.age,
-      country: user.country,
-      profilePhoto: user.profilePhoto,
-      role: user.role,
-      points: user.points,
-      streak: user.streak,
-      badges: user.badges,
-      completedChallengesCount: user.completedChallengesCount,
-      carbonSaved: user.carbonSaved
-    };
+    return UserDTO.fromEntity(updatedUser);
   }
 }
 
-module.exports = new AuthService();
+// Dependency Injection Composition
+const userRepository = require('../repositories/userRepository');
+const logger = require('../utils/logger');
+
+module.exports = new AuthService(userRepository, logger);
+// Export class also for testing injection overrides if needed
+module.exports.AuthService = AuthService;

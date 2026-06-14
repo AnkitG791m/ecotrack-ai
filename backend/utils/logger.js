@@ -1,5 +1,6 @@
 const winston = require('winston');
 const path = require('path');
+const env = require('../config/env');
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -10,7 +11,7 @@ const logFormat = winston.format.combine(
 );
 
 const logger = winston.createLogger({
-  level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
+  level: env.NODE_ENV === 'development' ? 'debug' : 'info',
   format: logFormat,
   defaultMeta: { service: 'ecotrack-backend' },
   transports: [
@@ -31,7 +32,7 @@ const logger = winston.createLogger({
 });
 
 // If we're not in production, log to the console with colorized output
-if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+if (env.NODE_ENV !== 'production' && env.NODE_ENV !== 'test') {
   logger.add(new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize(),

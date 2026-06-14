@@ -1,12 +1,17 @@
 const User = require('../models/User');
+const IUserRepository = require('./interfaces/IUserRepository');
 
-class UserRepository {
+class UserRepository extends IUserRepository {
   async findById(id) {
     return await User.findById(id);
   }
 
   async findByIdWithoutPassword(id) {
-    return await User.findById(id).select('-password');
+    const query = User.findById(id);
+    if (query && typeof query.select === 'function') {
+      return await query.select('-password');
+    }
+    return await query;
   }
 
   findOne(query) {

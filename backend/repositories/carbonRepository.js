@@ -1,6 +1,7 @@
 const CarbonReport = require('../models/CarbonReport');
+const ICarbonRepository = require('./interfaces/ICarbonRepository');
 
-class CarbonRepository {
+class CarbonRepository extends ICarbonRepository {
   async findById(id) {
     return await CarbonReport.findById(id);
   }

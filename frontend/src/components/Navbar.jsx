@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -11,6 +11,19 @@ const Navbar = () => {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  // Close menus on Escape key
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === 'Escape') {
+      setDropdownOpen(false);
+      setIsOpen(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: Leaf },
@@ -25,13 +38,16 @@ const Navbar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-40 bg-dark-950/70 border-b border-white/[0.05] backdrop-blur-md">
+    <nav
+      className="sticky top-0 z-40 bg-dark-950/70 border-b border-white/[0.05] backdrop-blur-md"
+      aria-label="Main navigation"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2 group">
-              <div className="p-2 bg-brand-500/10 rounded-xl group-hover:bg-brand-500/20 border border-brand-500/20 transition-all">
+            <Link to={user ? "/dashboard" : "/"} className="flex items-center space-x-2 group" aria-label="EcoTrack AI home">
+              <div className="p-2 bg-brand-500/10 rounded-xl group-hover:bg-brand-500/20 border border-brand-500/20 transition-all" aria-hidden="true">
                 <Leaf className="h-5 w-5 text-brand-400" />
               </div>
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-neutral-100 to-brand-300">
@@ -45,17 +61,19 @@ const Navbar = () => {
             <div className="hidden lg:flex items-center space-x-1">
               {navigation.map((item) => {
                 const Icon = item.icon;
+                const active = isActive(item.href);
                 return (
                   <Link
                     key={item.name}
                     to={item.href}
+                    aria-current={active ? 'page' : undefined}
                     className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                      isActive(item.href)
+                      active
                         ? 'bg-brand-500/10 text-brand-300 border border-brand-500/20'
                         : 'text-white/70 hover:text-white hover:bg-white/[0.03] border border-transparent'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -171,10 +189,11 @@ const Navbar = () => {
             <button
               onClick={() => setIsOpen(!isOpen)}
               aria-expanded={isOpen}
-              aria-label="Toggle navigation menu"
-              className="inline-flex items-center justify-center p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/[0.04] focus:outline-none transition-all"
+              aria-controls="mobile-nav"
+              aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              className="inline-flex items-center justify-center p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-all"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? <X className="h-6 w-6" aria-hidden="true" /> : <Menu className="h-6 w-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -182,21 +201,23 @@ const Navbar = () => {
 
       {/* Mobile Drawer Navigation */}
       {isOpen && user && (
-        <div className="lg:hidden bg-dark-900 border-b border-white/[0.06] py-3 px-4 space-y-1">
+        <div id="mobile-nav" className="lg:hidden bg-dark-900 border-b border-white/[0.06] py-3 px-4 space-y-1" role="navigation" aria-label="Mobile navigation">
           {navigation.map((item) => {
             const Icon = item.icon;
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.name}
                 to={item.href}
                 onClick={() => setIsOpen(false)}
+                aria-current={active ? 'page' : undefined}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-base font-medium transition-all ${
-                  isActive(item.href)
+                  active
                     ? 'bg-brand-500/10 text-brand-300 border border-brand-500/20'
                     : 'text-white/70 hover:text-white hover:bg-white/[0.03]'
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" aria-hidden="true" />
                 <span>{item.name}</span>
               </Link>
             );

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
+const env = require('./config/env');
 const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
 const helmet = require('helmet');
@@ -13,15 +13,13 @@ const { HTTP_STATUS, RATE_LIMIT } = require('./config/constants');
 const { errorHandler } = require('./middleware/errorMiddleware');
 const logger = require('./utils/logger');
 
-// Load environment variables
-dotenv.config();
-
 // Connect to Database if not in test environment
-if (process.env.NODE_ENV !== 'test') {
+if (env.NODE_ENV !== 'test') {
   connectDB();
 }
 
 const app = express();
+app.set('trust proxy', 1);
 app.disable('x-powered-by');
 
 // Request logger middleware via Winston
@@ -42,9 +40,9 @@ app.use(
 app.use(xss());
 
 // Configure CORS
-const allowedOrigins = process.env.FRONTEND_URL
-  ? [process.env.FRONTEND_URL]
-  : (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173']);
+const allowedOrigins = env.FRONTEND_URL
+  ? [env.FRONTEND_URL]
+  : (env.ALLOWED_ORIGINS ? env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173']);
 
 const corsOptions = {
   origin: (origin, callback) => {
@@ -125,12 +123,12 @@ app.get('/', (req, res) => {
 // Centralized error handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT || 5000;
 
 // Only start listening if not running in test runner environment
-if (process.env.NODE_ENV !== 'test') {
+if (env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    logger.info(`Server running in ${env.NODE_ENV} mode on port ${PORT}`);
   });
 }
 

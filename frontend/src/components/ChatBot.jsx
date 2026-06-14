@@ -21,6 +21,14 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages, isOpen]);
 
+  // Close chatbot on Escape key
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEsc = (e) => { if (e.key === 'Escape') setIsOpen(false); };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isOpen]);
+
   // Don't show chatbot if user is not logged in
   if (!user) return null;
 
@@ -135,9 +143,12 @@ const ChatBot = () => {
       {isOpen && (
         <div 
           role="dialog"
+          aria-modal="true"
           aria-label="EcoBot Chat Assistant"
+          aria-describedby="chatbot-desc"
           className="w-[360px] sm:w-[400px] h-[500px] rounded-2xl bg-dark-900 border border-white/[0.08] shadow-2xl flex flex-col overflow-hidden backdrop-blur-2xl"
         >
+          <p id="chatbot-desc" className="sr-only">AI-powered carbon footprint assistant. Ask questions about sustainability and eco-friendly living.</p>
           {/* Header */}
           <div className="bg-white/[0.02] border-b border-white/[0.06] p-4 flex items-center justify-between">
             <div className="flex items-center space-x-2.5">
@@ -198,6 +209,7 @@ const ChatBot = () => {
                 <button
                   key={idx}
                   onClick={() => handleSend(q)}
+                  aria-label={`Ask: ${q}`}
                   className="text-[11px] bg-white/[0.03] border border-white/[0.06] rounded-full px-2.5 py-1 text-white/60 hover:text-white hover:bg-brand-500/5 hover:border-brand-500/20 transition-all"
                 >
                   {q}

@@ -1,6 +1,9 @@
-const userRepository = require('../repositories/userRepository');
-
 class LeaderboardService {
+  constructor(userRepository, logger) {
+    this.userRepository = userRepository;
+    this.logger = logger;
+  }
+
   async getLeaderboard(filter = 'all-time') {
     let query = {};
     const now = new Date();
@@ -19,13 +22,15 @@ class LeaderboardService {
       query = { lastLoginDate: { $gte: startOfMonth } };
     }
 
-    let users = await userRepository.find(query)
+    this.logger.info(`Fetching leaderboard rankings with filter: ${filter}`);
+
+    let users = await this.userRepository.find(query)
       .select('name email points carbonSaved badges profilePhoto country lastLoginDate')
       .sort({ points: -1 })
       .limit(50);
 
     if (users.length < 5) {
-      users = await userRepository.find({})
+      users = await this.userRepository.find({})
         .select('name email points carbonSaved badges profilePhoto country lastLoginDate')
         .sort({ points: -1 })
         .limit(50);
@@ -44,4 +49,9 @@ class LeaderboardService {
   }
 }
 
-module.exports = new LeaderboardService();
+// Dependency Injection Composition
+const userRepository = require('../repositories/userRepository');
+const logger = require('../utils/logger');
+
+module.exports = new LeaderboardService(userRepository, logger);
+module.exports.LeaderboardService = LeaderboardService;

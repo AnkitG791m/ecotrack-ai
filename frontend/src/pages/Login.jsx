@@ -87,51 +87,57 @@ const Login = () => {
 
           {/* Feedback alerts */}
           {error && (
-            <div className="p-3 mb-4 bg-red-500/10 border border-red-500/25 rounded-xl text-xs text-red-400 flex items-center space-x-2.5">
-              <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" />
+            <div role="alert" aria-live="assertive" className="p-3 mb-4 bg-red-500/10 border border-red-500/25 rounded-xl text-xs text-red-400 flex items-center space-x-2.5">
+              <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="p-3 mb-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-xs text-brand-400 flex items-center space-x-2.5 animate-pulse">
-              <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0" />
+            <div role="status" aria-live="polite" className="p-3 mb-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-xs text-brand-400 flex items-center space-x-2.5 animate-pulse">
+              <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0" aria-hidden="true" />
               <span>{success}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
             <div className="space-y-1.5">
-              <label className="text-xs text-white/60 font-semibold pl-1">Email Address</label>
+              <label htmlFor="login-email" className="text-xs text-white/60 font-semibold pl-1">Email Address</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                   <Mail className="h-4 w-4" />
                 </span>
                 <input
+                  id="login-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@domain.com"
                   className="glass-input !pl-10 text-sm"
                   disabled={loading}
+                  autoComplete="email"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-white/60 font-semibold pl-1">Password</label>
+              <label htmlFor="login-password" className="text-xs text-white/60 font-semibold pl-1">Password</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                   <Lock className="h-4 w-4" />
                 </span>
                 <input
+                  id="login-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="glass-input !pl-10 text-sm"
                   disabled={loading}
+                  autoComplete="current-password"
+                  required
                 />
               </div>
             </div>
@@ -163,9 +169,11 @@ const Login = () => {
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
+            aria-label="Sign in with Google"
+            type="button"
             className="w-full glass-button-secondary flex items-center justify-center space-x-2 text-sm"
           >
-            <svg className="h-4 w-4" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 fill="currentColor"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

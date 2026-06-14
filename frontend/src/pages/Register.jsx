@@ -78,98 +78,113 @@ const Register = () => {
 
           {/* Feedback banners */}
           {error && (
-            <div className="p-3 mb-4 bg-red-500/10 border border-red-500/25 rounded-xl text-xs text-red-400 flex items-center space-x-2.5">
-              <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" />
+            <div role="alert" aria-live="assertive" className="p-3 mb-4 bg-red-500/10 border border-red-500/25 rounded-xl text-xs text-red-400 flex items-center space-x-2.5">
+              <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" aria-hidden="true" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="p-3 mb-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-xs text-brand-400 flex items-center space-x-2.5">
-              <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0" />
+            <div role="status" aria-live="polite" className="p-3 mb-4 bg-brand-500/10 border border-brand-500/25 rounded-xl text-xs text-brand-400 flex items-center space-x-2.5">
+              <CheckCircle2 className="h-4.5 w-4.5 flex-shrink-0" aria-hidden="true" />
               <span>{success}</span>
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-label="Create account form" noValidate>
             <div className="space-y-1.5">
-              <label className="text-xs text-white/60 font-semibold pl-1">Name *</label>
+              <label htmlFor="reg-name" className="text-xs text-white/60 font-semibold pl-1">Name *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                   <User className="h-4 w-4" />
                 </span>
                 <input
+                  id="reg-name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Doe"
                   className="glass-input !pl-10 text-sm"
                   disabled={loading}
+                  autoComplete="name"
+                  required
+                  aria-required="true"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-white/60 font-semibold pl-1">Email Address *</label>
+              <label htmlFor="reg-email" className="text-xs text-white/60 font-semibold pl-1">Email Address *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                   <Mail className="h-4 w-4" />
                 </span>
                 <input
+                  id="reg-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="john@example.com"
                   className="glass-input !pl-10 text-sm"
                   disabled={loading}
+                  autoComplete="email"
+                  required
+                  aria-required="true"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs text-white/60 font-semibold pl-1">Password *</label>
+              <label htmlFor="reg-password" className="text-xs text-white/60 font-semibold pl-1">Password *</label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                   <Lock className="h-4 w-4" />
                 </span>
                 <input
+                  id="reg-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Min. 6 characters"
                   className="glass-input !pl-10 text-sm"
                   disabled={loading}
+                  autoComplete="new-password"
+                  required
+                  aria-required="true"
                 />
               </div>
             </div>
 
-            {/* Grid of Age & Country */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs text-white/60 font-semibold pl-1">Age (Years)</label>
+                <label htmlFor="reg-age" className="text-xs text-white/60 font-semibold pl-1">Age (Years)</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                     <Calendar className="h-4 w-4" />
                   </span>
                   <input
+                    id="reg-age"
                     type="number"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
                     placeholder="25"
                     className="glass-input !pl-10 text-sm"
                     disabled={loading}
+                    min="1"
+                    max="120"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs text-white/60 font-semibold pl-1">Country</label>
+                <label htmlFor="reg-country" className="text-xs text-white/60 font-semibold pl-1">Country</label>
                 <div className="relative">
-                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-white/30" aria-hidden="true">
                     <Globe className="h-4 w-4" />
                   </span>
                   <input
+                    id="reg-country"
                     type="text"
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
