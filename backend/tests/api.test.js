@@ -66,7 +66,7 @@ describe('EcoTrack AI - Test Suite', () => {
     jest.clearAllMocks();
   });
 
-  // --- 1. HEALTH CHECK (3 Tests) ---
+  // --- 1. HEALTH CHECK & DIAGNOSTICS (6 Tests) ---
   describe('Health Check API', () => {
     it('should return 200 OK for root endpoint', async () => {
       const res = await request(app).get('/');
@@ -81,6 +81,26 @@ describe('EcoTrack AI - Test Suite', () => {
     it('should contain status healthy in body', async () => {
       const res = await request(app).get('/');
       expect(res.body.status).toBe('healthy');
+    });
+
+    it('should verify health diagnostics endpoint', async () => {
+      const res = await request(app).get('/api/health');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.status).toBe('healthy');
+    });
+
+    it('should verify database health diagnostics endpoint', async () => {
+      const res = await request(app).get('/api/health/db');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.status).toBe('healthy');
+    });
+
+    it('should verify Gemini AI health diagnostics endpoint', async () => {
+      const res = await request(app).get('/api/health/ai');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.success).toBe(true);
     });
   });
 
@@ -111,6 +131,18 @@ describe('EcoTrack AI - Test Suite', () => {
       const res = await request(app).get('/');
       expect(res.headers['ratelimit-limit']).toBeDefined();
       expect(res.headers['ratelimit-remaining']).toBeDefined();
+    });
+
+    it('should render Swagger OpenAPI documentation endpoint html', async () => {
+      const res = await request(app).get('/api-docs/');
+      expect(res.statusCode).toBe(200);
+      expect(res.headers['content-type']).toContain('html');
+    });
+
+    it('should verify winston logger configuration exists', () => {
+      const loggerInstance = require('../utils/logger');
+      expect(loggerInstance).toBeDefined();
+      expect(loggerInstance.info).toBeDefined();
     });
   });
 
@@ -591,6 +623,80 @@ describe('EcoTrack AI - Test Suite', () => {
 
       expect(res.statusCode).toBe(400);
       expect(res.body.success).toBe(false);
+    });
+
+    it('should reject registration with invalid email format (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Valid Name', email: 'invalid-email-format', password: 'password123' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject registration with short passwords (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ name: 'Valid Name', email: 'valid@e.com', password: '123' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject registration with missing name (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({ email: 'valid@e.com', password: 'password123' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject login with invalid email format (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'bademail', password: 'password123' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject login with missing password (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'valid@e.com' });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
+    it('should reject simulated Google login with invalid details (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/auth/google')
+        .send({ name: '' }); // missing email
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it('should reject carbon calculator requests with incorrect types (Zod check)', async () => {
+      const res = await request(app)
+        .post('/api/calculator/calculate')
+        .set('Authorization', `Bearer ${mockToken}`)
+        .send({
+          carKm: "one-hundred", // should be number
+          electricityUnits: 200,
+          diet: 'vegetarian'
+        });
+
+      expect(res.statusCode).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
     });
   });
 

@@ -6,9 +6,12 @@ const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const xss = require('xss-clean');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const connectDB = require('./config/db');
 const { HTTP_STATUS, RATE_LIMIT } = require('./config/constants');
 const { errorHandler } = require('./middleware/errorMiddleware');
+const logger = require('./utils/logger');
 
 // Load environment variables
 dotenv.config();
@@ -20,6 +23,12 @@ if (process.env.NODE_ENV !== 'test') {
 
 const app = express();
 app.disable('x-powered-by');
+
+// Request logger middleware via Winston
+app.use((req, res, next) => {
+  logger.info(`${req.method} ${req.originalUrl} - IP: ${req.ip}`);
+  next();
+});
 
 // Security Middlewares
 app.use(
@@ -90,6 +99,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Swagger Documentation Route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Route Mountings
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/calculator', require('./routes/calculatorRoutes'));
@@ -99,6 +111,7 @@ app.use('/api/community', require('./routes/communityRoutes'));
 app.use('/api/habits', require('./routes/habitRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/health', require('./routes/healthRoutes'));
 
 /**
  * @route GET /
@@ -117,7 +130,7 @@ const PORT = process.env.PORT || 5000;
 // Only start listening if not running in test runner environment
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    logger.info(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 }
 

@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const userRepository = require('../repositories/userRepository');
 
 class LeaderboardService {
   async getLeaderboard(filter = 'all-time') {
@@ -19,13 +19,13 @@ class LeaderboardService {
       query = { lastLoginDate: { $gte: startOfMonth } };
     }
 
-    let users = await User.find(query)
+    let users = await userRepository.find(query)
       .select('name email points carbonSaved badges profilePhoto country lastLoginDate')
       .sort({ points: -1 })
       .limit(50);
 
     if (users.length < 5) {
-      users = await User.find({})
+      users = await userRepository.find({})
         .select('name email points carbonSaved badges profilePhoto country lastLoginDate')
         .sort({ points: -1 })
         .limit(50);

@@ -1,5 +1,6 @@
 const carbonService = require('../services/carbonService');
 const asyncHandler = require('../middleware/asyncHandler');
+const { calculatorAnswersSchema } = require('../validators/calculatorValidator');
 const { HTTP_STATUS } = require('../config/constants');
 
 /**
@@ -7,7 +8,16 @@ const { HTTP_STATUS } = require('../config/constants');
  * POST /api/calculator/calculate
  */
 const saveCalculatorReport = asyncHandler(async (req, res) => {
-  const result = await carbonService.saveCalculatorReport(req.user.id, req.body);
+  if (!req.body || Object.keys(req.body).length === 0) {
+    const err = new Error('Survey answers cannot be empty');
+    err.statusCode = HTTP_STATUS.BAD_REQUEST;
+    throw err;
+  }
+
+  // Validate request body using Zod schema
+  const validatedAnswers = calculatorAnswersSchema.parse(req.body);
+
+  const result = await carbonService.saveCalculatorReport(req.user.id, validatedAnswers);
   res.status(HTTP_STATUS.CREATED).json({
     success: true,
     ...result

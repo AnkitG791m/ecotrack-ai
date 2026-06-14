@@ -1,18 +1,12 @@
-const CarbonReport = require('../models/CarbonReport');
-const User = require('../models/User');
+const carbonRepository = require('../repositories/carbonRepository');
+const userRepository = require('../repositories/userRepository');
 const { calculateCarbonScore } = require('../utils/carbonCalc');
 
 class CarbonService {
   async saveCalculatorReport(userId, answers) {
-    if (!answers || Object.keys(answers).length === 0) {
-      const err = new Error('Please provide survey responses');
-      err.statusCode = 400;
-      throw err;
-    }
-
     const calcResult = calculateCarbonScore(answers);
 
-    const report = await CarbonReport.create({
+    const report = await carbonRepository.create({
       user: userId,
       score: calcResult.totalKgCO2,
       annualEstimation: calcResult.annualEstimationTons,
@@ -24,14 +18,14 @@ class CarbonService {
       answers
     });
 
-    const user = await User.findById(userId);
+    const user = await userRepository.findById(userId);
     if (!user) {
       const err = new Error('User not found');
       err.statusCode = 404;
       throw err;
     }
 
-    const pastReportsCount = await CarbonReport.countDocuments({ user: userId });
+    const pastReportsCount = await carbonRepository.countDocuments({ user: userId });
     let pointsEarned = pastReportsCount === 1 ? 100 : 30;
     user.points += pointsEarned;
 
@@ -52,7 +46,7 @@ class CarbonService {
     }
 
     user.badges = Array.from(currentBadges);
-    await user.save();
+    await userRepository.save(user);
 
     return {
       pointsEarned,
@@ -65,11 +59,11 @@ class CarbonService {
   }
 
   async getHistory(userId) {
-    return await CarbonReport.find({ user: userId }).sort({ createdAt: 1 });
+    return await carbonRepository.find({ user: userId }).sort({ createdAt: 1 });
   }
 
   async getLatestReport(userId) {
-    return await CarbonReport.findOne({ user: userId }).sort({ createdAt: -1 });
+    return await carbonRepository.findOne({ user: userId }).sort({ createdAt: -1 });
   }
 }
 

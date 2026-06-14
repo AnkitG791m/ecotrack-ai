@@ -1,5 +1,5 @@
 const AIReport = require('../models/AIReport');
-const CarbonReport = require('../models/CarbonReport');
+const carbonRepository = require('../repositories/carbonRepository');
 const {
   generateAIRecommendations,
   getChatbotResponse,
@@ -9,7 +9,7 @@ const {
 
 class AiService {
   async getRecommendations(userId) {
-    const latestReport = await CarbonReport.findOne({ user: userId }).sort({ createdAt: -1 });
+    const latestReport = await carbonRepository.findOne({ user: userId }).sort({ createdAt: -1 });
     if (!latestReport) {
       const err = new Error('No carbon calculator reports found. Please calculate your carbon footprint first!');
       err.statusCode = 400;
@@ -80,7 +80,7 @@ class AiService {
   }
 
   async predictFootprint(userId) {
-    const reports = await CarbonReport.find({ user: userId }).sort({ createdAt: 1 });
+    const reports = await carbonRepository.find({ user: userId }).sort({ createdAt: 1 });
     
     if (reports.length === 0) {
       const err = new Error('Insufficient data for prediction. Please complete your carbon footprint calculator first.');
