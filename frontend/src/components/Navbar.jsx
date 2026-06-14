@@ -83,6 +83,9 @@ const Navbar = () => {
                 <div className="relative">
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen}
+                    aria-label="User profile menu"
                     className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-brand-500/40 rounded-full"
                   >
                     <img
@@ -98,14 +101,19 @@ const Navbar = () => {
                         className="fixed inset-0 z-10" 
                         onClick={() => setDropdownOpen(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-dark-900 border border-white/[0.08] p-1.5 shadow-2xl backdrop-blur-xl z-20">
+                      <div 
+                        role="menu"
+                        aria-label="User profile dropdown"
+                        className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl bg-dark-900 border border-white/[0.08] p-1.5 shadow-2xl backdrop-blur-xl z-20"
+                      >
                         <div className="px-3.5 py-3 border-b border-white/[0.06]">
                           <p className="text-sm font-semibold text-white truncate">{user.name}</p>
                           <p className="text-xs text-white/50 truncate mt-0.5">{user.email}</p>
                         </div>
-                        <div className="py-1">
+                        <div className="py-1" role="none">
                           <Link
                             to="/profile"
+                            role="menuitem"
                             onClick={() => setDropdownOpen(false)}
                             className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-sm text-white/80 hover:text-white hover:bg-white/[0.04] transition-all"
                           >
@@ -115,6 +123,7 @@ const Navbar = () => {
                           {isAdmin && (
                             <Link
                               to="/admin"
+                              role="menuitem"
                               onClick={() => setDropdownOpen(false)}
                               className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-sm text-brand-300 hover:bg-brand-500/5 transition-all"
                             >
@@ -127,6 +136,7 @@ const Navbar = () => {
                               setDropdownOpen(false);
                               logout();
                             }}
+                            role="menuitem"
                             className="w-full flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-500/5 transition-all text-left"
                           >
                             <LogOut className="h-4 w-4" />
@@ -160,6 +170,8 @@ const Navbar = () => {
           <div className="flex items-center lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
+              aria-expanded={isOpen}
+              aria-label="Toggle navigation menu"
               className="inline-flex items-center justify-center p-2 rounded-xl text-white/70 hover:text-white hover:bg-white/[0.04] focus:outline-none transition-all"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}

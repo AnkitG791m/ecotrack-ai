@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Challenge = require('../models/Challenge');
 const Post = require('../models/Post');
+const { HTTP_STATUS } = require('../config/constants');
 
 /**
  * Fetch platform analytics
@@ -41,7 +42,7 @@ const getPlatformAnalytics = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -54,7 +55,7 @@ const getUsers = async (req, res) => {
     const users = await User.find({}).select('-password').sort({ createdAt: -1 });
     res.json({ success: true, users });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -66,7 +67,7 @@ const updateUserRole = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
 
     user.role = user.role === 'admin' ? 'user' : 'admin';
@@ -74,7 +75,7 @@ const updateUserRole = async (req, res) => {
 
     res.json({ success: true, message: `User role updated to ${user.role}`, user });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -82,13 +83,13 @@ const deleteUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
 
     await User.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'User successfully deleted' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -100,7 +101,7 @@ const createChallenge = async (req, res) => {
   try {
     const { title, description, points, type, difficulty } = req.body;
     if (!title || !description) {
-      return res.status(400).json({ success: false, message: 'Title and description are required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Title and description are required' });
     }
 
     const challenge = await Challenge.create({
@@ -111,9 +112,9 @@ const createChallenge = async (req, res) => {
       difficulty: difficulty || 'easy'
     });
 
-    res.status(201).json({ success: true, challenge });
+    res.status(HTTP_STATUS.CREATED).json({ success: true, challenge });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -125,13 +126,13 @@ const deleteChallenge = async (req, res) => {
   try {
     const challenge = await Challenge.findById(req.params.id);
     if (!challenge) {
-      return res.status(404).json({ success: false, message: 'Challenge not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Challenge not found' });
     }
 
     await Challenge.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Challenge deleted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -143,13 +144,13 @@ const deletePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Post not found' });
     }
 
     await Post.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Post removed successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

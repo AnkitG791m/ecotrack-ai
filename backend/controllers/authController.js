@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { HTTP_STATUS } = require('../config/constants');
 
 // Helper to generate JWT Token
 const generateToken = (id) => {
@@ -18,21 +19,21 @@ const registerUser = async (req, res) => {
     const { name, email, password, age, country, profilePhoto } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Please add all required fields' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please add all required fields' });
     }
 
     if (typeof email !== 'string' || !email.includes('@')) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid email' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide a valid email' });
     }
 
     if (typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ success: false, message: 'Password must be at least 6 characters' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Password must be at least 6 characters' });
     }
 
     // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'User already exists' });
     }
 
     // Hash password
@@ -51,7 +52,7 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
-      res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
         success: true,
         token: generateToken(user._id),
         user: {
@@ -70,10 +71,10 @@ const registerUser = async (req, res) => {
         }
       });
     } else {
-      res.status(400).json({ success: false, message: 'Invalid user data' });
+      res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Invalid user data' });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -86,19 +87,19 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, message: 'Please provide email and password' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide email and password' });
     }
 
     // Check for user email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: 'Invalid credentials' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({ success: false, message: 'Invalid credentials' });
     }
 
     // Update streak / login dates (Daily login bonus)
@@ -145,7 +146,7 @@ const loginUser = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -158,7 +159,7 @@ const googleLogin = async (req, res) => {
     const { name, email, profilePhoto } = req.body;
 
     if (!email || !name) {
-      return res.status(400).json({ success: false, message: 'Google authentication details missing' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Google authentication details missing' });
     }
 
     let user = await User.findOne({ email });
@@ -218,7 +219,7 @@ const googleLogin = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -230,11 +231,11 @@ const getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
     res.json({ success: true, user });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -246,7 +247,7 @@ const updateProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'User not found' });
     }
 
     user.name = req.body.name || user.name;
@@ -280,7 +281,7 @@ const updateProfile = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

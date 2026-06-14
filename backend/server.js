@@ -3,8 +3,10 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoSanitize = require('express-mongo-sanitize');
 const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
-const { HTTP_STATUS } = require('./config/constants');
+const { HTTP_STATUS, RATE_LIMIT } = require('./config/constants');
 
 // Load environment variables
 dotenv.config();
@@ -18,9 +20,27 @@ const app = express();
 app.disable('x-powered-by');
 
 // Security and Efficiency Middlewares
-app.use(cors());
+app.use(helmet());
+
+// Configure CORS
+const corsOptions = {
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : true,
+  credentials: true
+};
+app.use(cors(corsOptions));
+
 app.use(compression());
 app.use(mongoSanitize());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: RATE_LIMIT.WINDOW_MS,
+  max: RATE_LIMIT.MAX_REQUESTS,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' }
+});
+app.use(limiter);
 
 // Increase limits to allow base64 images to be uploaded
 app.use(express.json({ limit: '50mb' }));

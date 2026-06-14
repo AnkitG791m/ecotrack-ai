@@ -1,5 +1,6 @@
 const Challenge = require('../models/Challenge');
 const User = require('../models/User');
+const { HTTP_STATUS } = require('../config/constants');
 
 // Default eco-challenges to seed database if empty
 const defaultChallenges = [
@@ -63,7 +64,7 @@ const getChallenges = async (req, res) => {
 
     res.json({ success: true, challenges });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -76,7 +77,7 @@ const completeChallenge = async (req, res) => {
     const challengeId = req.params.id;
     const challenge = await Challenge.findById(challengeId);
     if (!challenge) {
-      return res.status(404).json({ success: false, message: 'Challenge not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Challenge not found' });
     }
 
     const user = await User.findById(req.user.id);
@@ -92,7 +93,7 @@ const completeChallenge = async (req, res) => {
     });
 
     if (alreadyCompletedToday) {
-      return res.status(400).json({ success: false, message: 'You have already completed this challenge today!' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'You have already completed this challenge today!' });
     }
 
     // Award points and stats
@@ -132,7 +133,7 @@ const completeChallenge = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

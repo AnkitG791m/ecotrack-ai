@@ -1,5 +1,6 @@
 const Habit = require('../models/Habit');
 const User = require('../models/User');
+const { HTTP_STATUS } = require('../config/constants');
 
 const defaultHabitNames = [
   'Carry reusable water bottle',
@@ -30,7 +31,7 @@ const getHabits = async (req, res) => {
 
     res.json({ success: true, habits });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -42,12 +43,12 @@ const toggleHabit = async (req, res) => {
   try {
     const { habitId, date } = req.body; // date format: 'YYYY-MM-DD'
     if (!habitId || !date) {
-      return res.status(400).json({ success: false, message: 'Habit ID and date are required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Habit ID and date are required' });
     }
 
     const habit = await Habit.findOne({ _id: habitId, user: req.user.id });
     if (!habit) {
-      return res.status(404).json({ success: false, message: 'Habit not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Habit not found' });
     }
 
     const user = await User.findById(req.user.id);
@@ -105,7 +106,7 @@ const toggleHabit = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

@@ -84,10 +84,10 @@ describe('EcoTrack AI - Test Suite', () => {
     });
   });
 
-  // --- 2. SECURITY HEADERS (3 Tests) ---
+  // --- 2. SECURITY HEADERS (5 Tests) ---
   describe('Security Headers & Middlewares', () => {
     it('should enable CORS headers', async () => {
-      const res = await request(app).get('/');
+      const res = await request(app).get('/').set('Origin', 'http://localhost:5173');
       expect(res.headers['access-control-allow-origin']).toBeDefined();
     });
 
@@ -99,6 +99,18 @@ describe('EcoTrack AI - Test Suite', () => {
     it('should support gzip compression headers', async () => {
       const res = await request(app).get('/');
       expect(res.headers['vary']).toContain('Accept-Encoding');
+    });
+
+    it('should return Helmet security headers', async () => {
+      const res = await request(app).get('/');
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['x-frame-options']).toBe('SAMEORIGIN');
+    });
+
+    it('should return Rate Limiter headers', async () => {
+      const res = await request(app).get('/');
+      expect(res.headers['ratelimit-limit']).toBeDefined();
+      expect(res.headers['ratelimit-remaining']).toBeDefined();
     });
   });
 

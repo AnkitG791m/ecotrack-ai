@@ -1,6 +1,7 @@
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 const User = require('../models/User');
+const { HTTP_STATUS } = require('../config/constants');
 
 /**
  * Create a new community post
@@ -10,7 +11,7 @@ const createPost = async (req, res) => {
   try {
     const { title, content, tags } = req.body;
     if (!title || !content) {
-      return res.status(400).json({ success: false, message: 'Title and content are required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Title and content are required' });
     }
 
     const post = await Post.create({
@@ -27,13 +28,13 @@ const createPost = async (req, res) => {
 
     const populatedPost = await Post.findById(post._id).populate('user', 'name profilePhoto points');
 
-    res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
       success: true,
       post: populatedPost,
       pointsEarned: 20
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -56,7 +57,7 @@ const getPosts = async (req, res) => {
 
     res.json({ success: true, posts });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -68,7 +69,7 @@ const likePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Post not found' });
     }
 
     const index = post.likes.indexOf(req.user.id);
@@ -97,7 +98,7 @@ const likePost = async (req, res) => {
 
     res.json({ success: true, upvotes: post.upvotes, isLiked });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -109,12 +110,12 @@ const createComment = async (req, res) => {
   try {
     const { content } = req.body;
     if (!content) {
-      return res.status(400).json({ success: false, message: 'Comment content is required' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Comment content is required' });
     }
 
     const post = await Post.findById(req.params.postId);
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({ success: false, message: 'Post not found' });
     }
 
     const comment = await Comment.create({
@@ -134,13 +135,13 @@ const createComment = async (req, res) => {
 
     const populatedComment = await Comment.findById(comment._id).populate('user', 'name profilePhoto');
 
-    res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
       success: true,
       comment: populatedComment,
       commentsCount: post.commentsCount
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -156,7 +157,7 @@ const getPostComments = async (req, res) => {
 
     res.json({ success: true, comments });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -192,7 +193,7 @@ const getCommunitySidebar = async (req, res) => {
       trendingTags
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

@@ -1,6 +1,7 @@
 const CarbonReport = require('../models/CarbonReport');
 const User = require('../models/User');
 const { calculateCarbonScore } = require('../utils/carbonCalc');
+const { HTTP_STATUS } = require('../config/constants');
 
 /**
  * Calculate and save carbon footprint report
@@ -10,7 +11,7 @@ const saveCalculatorReport = async (req, res) => {
   try {
     const answers = req.body;
     if (!answers) {
-      return res.status(400).json({ success: false, message: 'Please provide survey responses' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide survey responses' });
     }
 
     // Run calculation logic
@@ -62,7 +63,7 @@ const saveCalculatorReport = async (req, res) => {
     user.badges = Array.from(currentBadges);
     await user.save();
 
-    res.status(201).json({
+    res.status(HTTP_STATUS.CREATED).json({
       success: true,
       pointsEarned,
       report,
@@ -72,7 +73,7 @@ const saveCalculatorReport = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -85,7 +86,7 @@ const getHistory = async (req, res) => {
     const reports = await CarbonReport.find({ user: req.user.id }).sort({ createdAt: 1 });
     res.json({ success: true, reports });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -97,11 +98,11 @@ const getLatestReport = async (req, res) => {
   try {
     const latest = await CarbonReport.findOne({ user: req.user.id }).sort({ createdAt: -1 });
     if (!latest) {
-      return res.status(200).json({ success: true, report: null });
+      return res.status(HTTP_STATUS.OK).json({ success: true, report: null });
     }
     res.json({ success: true, report: latest });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

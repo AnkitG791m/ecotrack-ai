@@ -1,5 +1,6 @@
 const AIReport = require('../models/AIReport');
 const CarbonReport = require('../models/CarbonReport');
+const { HTTP_STATUS } = require('../config/constants');
 const {
   generateAIRecommendations,
   getChatbotResponse,
@@ -16,7 +17,7 @@ const getRecommendations = async (req, res) => {
     // Get latest report
     const latestReport = await CarbonReport.findOne({ user: req.user.id }).sort({ createdAt: -1 });
     if (!latestReport) {
-      return res.status(400).json({
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: 'No carbon calculator reports found. Please calculate your carbon footprint first!'
       });
@@ -40,7 +41,7 @@ const getRecommendations = async (req, res) => {
       report: aiReport
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -52,7 +53,7 @@ const queryChatbot = async (req, res) => {
   try {
     const { message, history = [] } = req.body;
     if (!message) {
-      return res.status(400).json({ success: false, message: 'Please provide a message' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide a message' });
     }
 
     const responseText = await getChatbotResponse(history, message);
@@ -62,7 +63,7 @@ const queryChatbot = async (req, res) => {
       reply: responseText
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -74,13 +75,13 @@ const analyzeImage = async (req, res) => {
   try {
     const { image } = req.body; // Expects base64 encoded image string (e.g. data:image/png;base64,...)
     if (!image) {
-      return res.status(400).json({ success: false, message: 'Please provide a base64 image string' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide a base64 image string' });
     }
 
     // Parse base64 data and mimeType
     const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
-      return res.status(400).json({ success: false, message: 'Invalid base64 image format' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Invalid base64 image format' });
     }
 
     const mimeType = matches[1];
@@ -93,7 +94,7 @@ const analyzeImage = async (req, res) => {
       analysis: analysisResult
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -105,13 +106,13 @@ const scanBill = async (req, res) => {
   try {
     const { image } = req.body; // Expects base64 electricity bill image
     if (!image) {
-      return res.status(400).json({ success: false, message: 'Please provide a base64 bill image' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Please provide a base64 bill image' });
     }
 
     // Parse base64 data and mimeType
     const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
     if (!matches || matches.length !== 3) {
-      return res.status(400).json({ success: false, message: 'Invalid base64 image format' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ success: false, message: 'Invalid base64 image format' });
     }
 
     const mimeType = matches[1];
@@ -124,7 +125,7 @@ const scanBill = async (req, res) => {
       scan: scanResult
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
@@ -137,7 +138,7 @@ const predictFootprint = async (req, res) => {
     const reports = await CarbonReport.find({ user: req.user.id }).sort({ createdAt: 1 });
     
     if (reports.length === 0) {
-      return res.status(400).json({
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
         success: false,
         message: 'Insufficient data for prediction. Please complete your carbon footprint calculator first.'
       });
@@ -185,7 +186,7 @@ const predictFootprint = async (req, res) => {
       message
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 

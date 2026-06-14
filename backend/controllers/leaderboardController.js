@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const { HTTP_STATUS } = require('../config/constants');
 
 /**
  * Get Leaderboard Rankings
@@ -57,7 +58,7 @@ const getLeaderboard = async (req, res) => {
 
     res.json({ success: true, leaderboard: rankedUsers });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(HTTP_STATUS.SERVER_ERROR).json({ success: false, message: error.message });
   }
 };
 
