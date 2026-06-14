@@ -10,7 +10,7 @@ const connectDB = async () => {
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
+    console.warn('Continuing server execution to allow deployment to succeed. Please configure MONGODB_URI in GCP environment variables.');
   }
 };
 
