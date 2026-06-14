@@ -4,6 +4,11 @@
 > and reduce their carbon footprint through intelligent 
 > recommendations and gamified sustainability challenges.
 
+## 🌐 Live Platform (GCP Cloud Run)
+* **Frontend Web App**: [https://ecotrack-frontend-882111542264.us-central1.run.app](https://ecotrack-frontend-882111542264.us-central1.run.app)
+* **Backend API Server**: [https://ecotrack-backend-882111542264.us-central1.run.app](https://ecotrack-backend-882111542264.us-central1.run.app)
+
+
 ## 🎯 Challenge Vertical
 **Smart Dynamic Assistant** - EcoTrack AI acts as a personal 
 environmental consultant that understands user context 
